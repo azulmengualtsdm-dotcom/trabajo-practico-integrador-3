@@ -54,12 +54,12 @@ const EventSchema = new Schema({
       maxlength: 50,
     },
   },
-  user_id: {
+  organizador: {
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
-  category_id: {
+  categories: {
     type: Schema.Types.ObjectId,
     ref: "Category",
     required: true,

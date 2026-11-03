@@ -1,65 +1,116 @@
-import { verifyToken } from "../helpers/jwt.helper.js";
 import { UserModel } from "../models/UserModel.js";
 
-export const authMiddleware = async (req, res, next) => {
+import { matchedData } from "express-validator";
+import { UserModel } from "../models/UserModel.js";
+import { hashPassword, comparePassword } from "../helpers/bcrypt.helper.js";
+import { generateToken } from "../helpers/jwt.helper.js";
+
+export const register = async (req, res) => {
   try {
-    const token = req.cookies?.token;
+    const data = matchedData(req);
+    const existingUser = await UserModel.findOne({
+      $or: [{ email: data.email }, { username: data.username }],
+    });
 
-    if (!token) {
-      return res.status(401).json({ msg: "no autorizado" });
-    }
-
-    const decoded = verifyToken(token);
-    if (!decoded) {
-      return res.status(401).json({ msg: "token inválido o expirado" });
-    }
-    const user = await UserModel.findById(decoded.id);
-    if (!user) {
-      return res.status(401).json({ msg: "el usuario no existe" });
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
-    res.status(500).json({ msg: "Error en el servidor de autenticación" });
-  }
-};
-
-export const adminMiddleware = (req, res, next) => {
-  if (!req.user || req.user.role !== "admin") {
-    return res
-      .status(403)
-      .json({
-        msg: "acceso denegado. Se requieren permisos de administrador.",
-      });
-  }
-  next();
-};
-
-import { model } from "mongoose";
-
-export const ownerOrAdminMiddleware = async (req, res, next) => {
-  try {
-    const { id: eventId } = req.params;
-    const authenticatedUser = req.user;
-
-    if (authenticatedUser.role === "admin") {
-      return next();
-    }
-
-    const event = await model("Event").findById(eventId);
-    if (!event) {
-      return res.status(404).json({ msg: "evento no encontrado." });
-    }
-
-    if (event.organizer.toString() !== authenticatedUser._id.toString()) {
+    if (existingUser) {
       return res
-        .status(403)
-        .json({ msg: "acceso denegado. No sos el organizador de este evento" });
+        .status(400)
+        .json({ msg: "el username o el email ya se encuentran registrados" });
     }
 
-    next();
+    data.password = await hashPassword(data.password);
+    const newUser = await UserModel.create({
+      username: data.username,
+      email: data.email,
+      password: hashedPassword,
+      role: "user",
+      profile: data.profile,
+    });
+
+    res.status(201).json({ data: newUser });
   } catch (error) {
-    res.status(500).json({ msg: "Error al validar" });
+    res
+      .status(500)
+      .json({ msg: "Error al registrar el usuario en el servidor" });
+  }
+};
+export const login = async (req, res) => {
+  try {
+    const { email, password } = matchedData(req);
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ msg: "credenciales invalidas" });
+    }
+
+    const isMatch = await comparePassword(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ msg: "contraseña incorrecta" });
+    }
+
+    const token = generateToken({ id: user._id });
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    user.password = undefined;
+    res.status(200).json({ data: user, msg: "login exitoso" });
+  } catch (error) {
+    res.status(500).json({ msg: "error al intentar iniciar sesion" });
+  }
+};
+
+export const logout = async (req, res, next) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+    });
+
+    res.status(200).json({
+      msg: "sesion cerrada correctamente",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProfile = async () => {
+  try {
+    const profile = await UserModel.find({ _id: req.user._id, deleteAt: null });
+
+    if (!profile) {
+      return res.status(404).json({ msg: "perfil no encontrao" });
+    }
+    res
+      .status(200)
+      .json({ msg: "Perfil obtenido correctamente", data: profile });
+  } catch (error) {
+    res.status(500).json({ msg: "hubo un error en el servidor" });
+  }
+};
+
+export const updateProfile = async () => {
+  try {
+    const user = req.user._id;
+    const { data } = matchedData(req);
+    const update = await UserModel.findOneAndUpdate(
+      user,
+      { $set: data },
+      { new: true, runValidators: true },
+    );
+
+    if (!update) {
+      return res.status(404).json({ msg: "perfil no encontrao" });
+    }
+
+    res.status(200).json({ msg: "Perfil modificado", data: update });
+  } catch (error) {
+    res.status(500).json({ msg: "hubo un error en el servidor" });
   }
 };

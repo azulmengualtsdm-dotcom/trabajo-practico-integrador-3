@@ -7,7 +7,10 @@ import { EventModel } from "../models/event.model.js";
 export const createEvent = async (req, res) => {
   try {
     const limData = matchedData(req);
-    const event = await EventModel.create(limData);
+    const event = await EventModel.create({
+      ...limData,
+      organizer: req.user._id,
+    });
     res.status(201).json({ data: event });
   } catch (error) {
     res.status(500).json({ msg: "Error, no se pudo crear el evento" });
@@ -33,7 +36,7 @@ export const myEvents = async (req, res) => {
   try {
     const myEvent = await EventModel.find({ organizer: req.user._id });
 
-    if (!myEvent) {
+    if (myEvent.length === 0) {
       return res.status(404).json({ msg: "no existe el evento" });
     }
     res.status(200).json({ data: myEvent });
@@ -64,7 +67,7 @@ export const getByOneEvent = async (req, res) => {
 export const updateEvent = async (req, res) => {
   try {
     const { id, ...data } = matchedData(req);
-    const update = await EventModel.findOneAndUpdate(id, data, {
+    const update = await EventModel.findOneAndUpdate({ _id: id }, data, {
       new: true,
       runValidators: true,
     }).populate("categories");
@@ -83,7 +86,7 @@ export const updateEvent = async (req, res) => {
 export const deleteEvent = async (req, res) => {
   try {
     const { id } = matchedData(req);
-    const deleteOne = await EventModel.findOneAndDelete(id);
+    const deleteOne = await EventModel.findOneAndDelete({ _id: id });
     if (!deleteOne) {
       return res.status(404).json({ msg: "no se encontro el evento" });
     }

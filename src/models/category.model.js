@@ -1,22 +1,33 @@
 import { Schema, model } from "mongoose";
 
-const CategorySchema = new Schema({
-  name: {
-    type: String,
-    unique: true,
-    minlength: 2,
-    maxlength: 30,
+const CategorySchema = new Schema(
+  {
+    name: {
+      type: String,
+      unique: true,
+      minlength: 2,
+      maxlength: 30,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: false,
+      maxlength: 200,
+      default: true,
+    },
   },
-  description: {
-    type: String,
-    required: false,
-    maxlength: 200,
+  {
+    timestamps: true,
+    versionKey: false,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   },
-  event_id: {
-    type: Schema.Types.ObjectId,
-    ref: "Event",
-    required: true,
-  },
+);
+
+CategorySchema.virtual("events", {
+  ref: "Event",
+  localField: "_id",
+  foreignField: "categories",
 });
 
 export const CategoryModel = model("Category", CategorySchema);

@@ -2,7 +2,7 @@ import { matchedData } from "express-validator";
 import { CategoryModel } from "../models/category.model.js";
 
 // ● POST /api/categories → Crear una categoría. (solo admin)
-export const createCategori = async (req, res) => {
+export const createCategory = async (req, res) => {
   try {
     const limData = matchedData(req);
     const newcategory = await CategoryModel.create(limData);

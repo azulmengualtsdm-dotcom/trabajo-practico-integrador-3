@@ -6,10 +6,11 @@
 
 import { matchedData } from "express-validator";
 import { UserModel } from "../models/usermode.js";
+import { EventModel } from "../models/event.model.js";
 
 export const getAllUser = async (req, res) => {
   try {
-    const users = await UserModel.find().populate("event");
+    const users = await UserModel.find({ deletedAt: null }).populate("events");
 
     res.status(200).json(users);
   } catch (error) {
@@ -20,7 +21,10 @@ export const getAllUser = async (req, res) => {
 export const getByIdUser = async (req, res) => {
   try {
     const { id } = matchedData(req);
-    const user = await UserModel.findById(id).populate("event");
+    const user = await UserModel.findOne({
+      _id: id,
+      deletedAt: null,
+    }).populate("events");
 
     if (!user) {
       return res.status(404).json({ msg: "no se encontro al usuario" });
@@ -65,8 +69,9 @@ export const deleteUser = async (req, res) => {
     );
 
     if (!deleteOne) {
-      res.status(404).json({ msg: "no se encontro al usuario" });
+      return res.status(404).json({ msg: "no se encontro al usuario" });
     }
+    await EventModel.deleteMany({ organizer: id });
     res.status(200).json({ data: deleteOne });
   } catch (error) {
     res.status(500).json({ msg: "Error, no se pudo eliminar al usuario" });

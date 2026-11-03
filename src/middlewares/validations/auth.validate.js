@@ -3,8 +3,8 @@
 // ● password: mínimo 8 caracteres, con al menos una mayúscula, una minúscula y un
 // número.
 // ● role: solo valores permitidos ('user', 'admin').
-import { ExpressValidator } from "express-validator";
 
+import { body } from "express-validator";
 export const validateRegister = [
   body("username")
     .trim()

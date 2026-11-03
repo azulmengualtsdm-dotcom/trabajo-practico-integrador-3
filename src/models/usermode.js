@@ -6,8 +6,6 @@ const UserSchema = new Schema(
       type: String,
       unique: true,
       required: true,
-      trim: true,
-      lowercase: true,
       minlength: 3,
       maxlength: 20,
     },
@@ -15,7 +13,6 @@ const UserSchema = new Schema(
       type: String,
       unique: true,
       required: true,
-      match: /.+\@.+\..+/,
     },
     password: {
       type: String,
@@ -32,16 +29,12 @@ const UserSchema = new Schema(
       firstName: {
         type: String,
         required: true,
-        trim: true,
-        lowercase: true,
         minlength: 2,
         maxlength: 50,
       },
       lastName: {
         type: String,
         required: true,
-        trim: true,
-        lowercase: true,
         minlength: 2,
         maxlength: 50,
       },
@@ -62,7 +55,15 @@ const UserSchema = new Schema(
   {
     timestamps: true,
     versionKey: false,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   },
 );
+
+UserSchema.virtual("events", {
+  ref: "Event",
+  localField: "_id",
+  foreignField: "organizer",
+});
 
 export const UserModel = model("User", UserSchema);

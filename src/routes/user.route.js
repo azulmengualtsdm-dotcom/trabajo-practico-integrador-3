@@ -8,7 +8,7 @@ import {
   updateUser,
 } from "../controllers/user.controller";
 
-userRouter = Router();
+export const userRouter = Router();
 
 userRouter.get("/users", handleValidationErrors, adminMiddleware, getAllUser);
 userRouter.get("/users/:id", myEvents, handleValidationErrors, adminMiddleware);

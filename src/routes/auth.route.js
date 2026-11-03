@@ -13,7 +13,7 @@ import {
   updateProfile,
 } from "../controllers/auth.controller";
 
-const authRouter = Router();
+export const authRouter = Router();
 
 authRouter.post(
   "/register",

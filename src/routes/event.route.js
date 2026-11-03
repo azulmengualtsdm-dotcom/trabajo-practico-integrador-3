@@ -14,7 +14,7 @@ import {
 } from "../middlewares/validations/auth.validate";
 import { handleValidationErrors } from "../middlewares/validate";
 
-const eventRouter = Router();
+export const eventRouter = Router();
 // ● POST /api/events → Crear un evento con sus categorías; el organizador es el usuario
 // autenticado. (usuario autenticado)
 

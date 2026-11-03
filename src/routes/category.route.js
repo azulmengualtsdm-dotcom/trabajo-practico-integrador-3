@@ -12,7 +12,7 @@ import {
 } from "../middlewares/validations/auth.validate";
 import { handleValidationErrors } from "../middlewares/validate";
 
-const categoryRouter = Router();
+export const categoryRouter = Router();
 
 categoryRouter.post(
   "/categories",

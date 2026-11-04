@@ -3,8 +3,8 @@ import {
   authMiddleware,
   validateLogin,
   validateRegister,
-} from "../middlewares/validations/auth.validate";
-import { handleValidationErrors } from "../middlewares/validate";
+} from "../middlewares/validations/auth.validate.js";
+import { handleValidationErrors } from "../middlewares/validate.js";
 import {
   getProfile,
   login,

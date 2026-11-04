@@ -6,13 +6,13 @@ import {
   getByOneEvent,
   myEvents,
   updateEvent,
-} from "../controllers/event.controller";
+} from "../controllers/event.controller.js";
 import {
   adminMiddleware,
   authMiddleware,
   ownerOrAdminMiddleware,
-} from "../middlewares/validations/auth.validate";
-import { handleValidationErrors } from "../middlewares/validate";
+} from "../middlewares/validations/auth.validate.js";
+import { handleValidationErrors } from "../middlewares/validate.js";
 
 export const eventRouter = Router();
 // ● POST /api/events → Crear un evento con sus categorías; el organizador es el usuario

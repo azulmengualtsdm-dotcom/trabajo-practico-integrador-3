@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { handleValidationErrors } from "../middlewares/validate";
-import { adminMiddleware } from "../controllers/auth.controller";
-import { myEvents } from "../controllers/event.controller";
+import { handleValidationErrors } from "../middlewares/validate.js";
+import { adminMiddleware } from "../controllers/auth.controller.js";
+import { myEvents } from "../controllers/event.controller.js";
 import {
   deleteUser,
   getAllUser,

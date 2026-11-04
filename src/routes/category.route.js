@@ -5,12 +5,12 @@ import {
   getAllCategories,
   getByidCategory,
   updateCategory,
-} from "../controllers/category.controller";
+} from "../controllers/category.controller.js";
 import {
   adminMiddleware,
   authMiddleware,
-} from "../middlewares/validations/auth.validate";
-import { handleValidationErrors } from "../middlewares/validate";
+} from "../middlewares/validations/auth.validate.js";
+import { handleValidationErrors } from "../middlewares/validate.js";
 
 export const categoryRouter = Router();
 

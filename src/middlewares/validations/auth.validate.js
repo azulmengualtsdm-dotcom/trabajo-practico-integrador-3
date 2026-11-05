@@ -4,8 +4,8 @@
 // número.
 // ● role: solo valores permitidos ('user', 'admin').
 
-import { verifyToken } from "../helpers/jwt.helpers.js";
-import { UserModel } from "../models/usermode.js";
+import { verifyToken } from "../../helpers/jwt.helpers.js";
+import { UserModel } from "../../models/usermode.js";
 
 export const authMiddleware = async (req, res, next) => {
   try {

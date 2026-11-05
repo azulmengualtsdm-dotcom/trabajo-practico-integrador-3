@@ -1,9 +1,8 @@
-import { UserModel } from "../models/UserModel.js";
+import { UserModel } from "../models/usermode.js";
 
 import { matchedData } from "express-validator";
-import { UserModel } from "../models/UserModel.js";
-import { hashPassword, comparePassword } from "../helpers/bcrypt.helper.js";
-import { generateToken } from "../helpers/jwt.helper.js";
+import { hashPassword, comparePassword } from "../helpers/bcrypt.helpers.js";
+import { generateToken } from "../helpers/jwt.helpers.js";
 
 export const register = async (req, res) => {
   try {
@@ -22,22 +21,37 @@ export const register = async (req, res) => {
     const newUser = await UserModel.create({
       username: data.username,
       email: data.email,
-      password: hashedPassword,
-      role: "user",
-      profile: data.profile,
+      password: data.password,
+      role: data.role || "user",
+      profile: {
+        firstName: data["profile.firstName"] || data.profile?.firstName,
+        lastName: data["profile.lastName"] || data.profile?.lastName,
+        birthDate: data["profile.birthDate"] || data.profile?.birthDate || null,
+        phone: data["profile.phone"] || data.profile?.phone || "",
+      },
     });
 
     res.status(201).json({ data: newUser });
   } catch (error) {
+    console.error("EL ERROR REAL ES ESTE 👉", error);
     res
       .status(500)
       .json({ msg: "Error al registrar el usuario en el servidor" });
   }
 };
+
 export const login = async (req, res) => {
   try {
-    const { email, password } = matchedData(req);
+    const camposValidados = matchedData(req);
+    const { email, password } = camposValidados;
+
     const user = await UserModel.findOne({ email });
+    console.log(
+      "LOGIN DIAGNÓSTICO -> Buscando email:",
+      email,
+      "| ¿Encontrado?:",
+      user ? "SÍ" : "NO",
+    );
     if (!user) {
       return res.status(400).json({ msg: "credenciales invalidas" });
     }
@@ -59,9 +73,40 @@ export const login = async (req, res) => {
     user.password = undefined;
     res.status(200).json({ data: user, msg: "login exitoso" });
   } catch (error) {
+    console.error("❌ ERROR CRÍTICO AL REGISTRAR:", error);
     res.status(500).json({ msg: "error al intentar iniciar sesion" });
   }
 };
+
+// export const login = async (req, res) => {
+//   try {
+//     const { email, password } = matchedData(req);
+//     const user = await UserModel.findOne({ email });
+//     if (!user) {
+//       return res.status(400).json({ msg: "credenciales invalidas" });
+//     }
+
+//     const isMatch = await comparePassword(password, user.password);
+//     if (!isMatch) {
+//       return res.status(400).json({ msg: "contraseña incorrecta" });
+//     }
+
+//     const token = generateToken({ id: user._id });
+
+//     res.cookie("token", token, {
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV === "production",
+//       sameSite: "strict",
+//       maxAge: 24 * 60 * 60 * 1000,
+//     });
+
+//     user.password = undefined;
+//     res.status(200).json({ data: user, msg: "login exitoso" });
+//   } catch (error) {
+//     console.error("EL ERROR REAL ES ESTE 👉", error);
+//     res.status(500).json({ msg: "error al intentar iniciar sesion" });
+//   }
+// };
 
 export const logout = async (req, res, next) => {
   try {
@@ -80,7 +125,7 @@ export const logout = async (req, res, next) => {
   }
 };
 
-export const getProfile = async () => {
+export const getProfile = async (req, res) => {
   try {
     const profile = await UserModel.find({ _id: req.user._id, deleteAt: null });
 
@@ -95,22 +140,36 @@ export const getProfile = async () => {
   }
 };
 
-export const updateProfile = async () => {
+export const updateProfile = async (req, res) => {
   try {
-    const user = req.user._id;
-    const { data } = matchedData(req);
-    const update = await UserModel.findOneAndUpdate(
-      user,
-      { $set: data },
-      { new: true, runValidators: true },
-    );
+    const userId = req.user._id;
+    const camposValidados = matchedData(req);
 
-    if (!update) {
-      return res.status(404).json({ msg: "perfil no encontrao" });
+    const updateQuery = {};
+    if (camposValidados.firstName)
+      updateQuery["profile.firstName"] = camposValidados.firstName;
+    if (camposValidados.lastName)
+      updateQuery["profile.lastName"] = camposValidados.lastName;
+    if (camposValidados.birthDate)
+      updateQuery["profile.birthDate"] = camposValidados.birthDate;
+    if (camposValidados.phone)
+      updateQuery["profile.phone"] = camposValidados.phone;
+
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { _id: userId },
+      { $set: updateQuery },
+      { new: true, runValidators: true },
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ msg: "perfil no encontrado" });
     }
 
-    res.status(200).json({ msg: "Perfil modificado", data: update });
+    return res
+      .status(200)
+      .json({ msg: "Perfil modificado con éxito", data: updatedUser });
   } catch (error) {
-    res.status(500).json({ msg: "hubo un error en el servidor" });
+    console.error("❌ ERROR REAL EN EL UPDATE_PROFILE:", error);
+    return res.status(500).json({ msg: "hubo un error en el servidor" });
   }
 };

@@ -1,12 +1,12 @@
 import { Router } from "express";
 import { handleValidationErrors } from "../middlewares/validate.js";
-import { adminMiddleware } from "../controllers/auth.controller.js";
+import { adminMiddleware } from "../middlewares/validations/auth.validate.js";
 import { myEvents } from "../controllers/event.controller.js";
 import {
   deleteUser,
   getAllUser,
   updateUser,
-} from "../controllers/user.controller";
+} from "../controllers/user.controller.js";
 
 export const userRouter = Router();
 

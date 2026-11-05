@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   authMiddleware,
   validateLogin,
+  validateProfileUpdate,
   validateRegister,
 } from "../middlewares/validations/auth.validate.js";
 import { handleValidationErrors } from "../middlewares/validate.js";
@@ -11,7 +12,7 @@ import {
   logout,
   register,
   updateProfile,
-} from "../controllers/auth.controller";
+} from "../controllers/auth.controller.js";
 
 export const authRouter = Router();
 
@@ -29,4 +30,5 @@ authRouter.put(
   updateProfile,
   authMiddleware,
   handleValidationErrors,
+  validateProfileUpdate,
 );

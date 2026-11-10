@@ -142,34 +142,33 @@ export const getProfile = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const userId = req.user._id;
-    const camposValidados = matchedData(req);
+    const { user_id } = req.user;
+    const data = matchedData(req, { locations: ["body"] });
 
-    const updateQuery = {};
-    if (camposValidados.firstName)
-      updateQuery["profile.firstName"] = camposValidados.firstName;
-    if (camposValidados.lastName)
-      updateQuery["profile.lastName"] = camposValidados.lastName;
-    if (camposValidados.birthDate)
-      updateQuery["profile.birthDate"] = camposValidados.birthDate;
-    if (camposValidados.phone)
-      updateQuery["profile.phone"] = camposValidados.phone;
+    const userExist = await UserModel.findOne({ _id: user_id });
 
-    const updatedUser = await UserModel.findOneAndUpdate(
-      { _id: userId },
-      { $set: updateQuery },
-      { new: true, runValidators: true },
-    ).select("-password");
+    const newProfile = {
+      ...userExist.profile,
+      ...data.profile,
+    };
 
-    if (!updatedUser) {
+    const updateUser = await UserModel.findByIdAndUpdate(
+      { _id: user_id },
+      { $set: { profile: newProfile } },
+      { returnDocument: "after" },
+    );
+    if (!updateUser) {
       return res.status(404).json({ msg: "perfil no encontrado" });
     }
 
     return res
       .status(200)
-      .json({ msg: "Perfil modificado con éxito", data: updatedUser });
+      .json({ msg: "Perfil modificado con éxito", data: updateUser });
   } catch (error) {
-    console.error("❌ ERROR REAL EN EL UPDATE_PROFILE:", error);
-    return res.status(500).json({ msg: "hubo un error en el servidor" });
+    res.status(500).json({
+      msg: "hubo un error en el servidor",
+      errorReal: error.message,
+      errorStack: error.name,
+    });
   }
 };

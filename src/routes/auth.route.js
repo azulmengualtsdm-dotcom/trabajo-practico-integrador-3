@@ -27,8 +27,8 @@ authRouter.post("/logout", logout, authMiddleware);
 authRouter.get("/profile", getProfile, authMiddleware);
 authRouter.put(
   "/profile",
-  updateProfile,
   authMiddleware,
-  handleValidationErrors,
   validateProfileUpdate,
+  handleValidationErrors,
+  updateProfile,
 );
